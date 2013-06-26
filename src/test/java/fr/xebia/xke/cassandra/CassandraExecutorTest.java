@@ -1,13 +1,6 @@
 package fr.xebia.xke.cassandra;
 
 
-import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
@@ -22,6 +15,15 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static org.fest.assertions.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class CassandraExecutorTest extends AbstractTest {
 
@@ -68,7 +70,7 @@ public class CassandraExecutorTest extends AbstractTest {
         ResultSet usersQuery = session().execute(QueryBuilder.select().column("id").from("user").limit(1));
         List<Row> allUsers = usersQuery.all();
         UUID id = allUsers.get(0).getUUID("id");
-        for(int j = 0; j < allUsers.size(); j++) {
+        for (int j = 0; j < allUsers.size(); j++) {
             executor.writeToClickStreamWithTTL(id, DateTime.now().toDate(),
                     "http://localhost/" + 0 + "/" + j, j);
         }
@@ -82,9 +84,9 @@ public class CassandraExecutorTest extends AbstractTest {
     public void should_read_click_stream() throws Exception {
         ResultSet usersQuery = session().execute(QueryBuilder.select().column("id").from("user").limit(5));
         List<Row> allUsers = usersQuery.all();
-        for(int i = 0; i < allUsers.size(); i++) {
+        for (int i = 0; i < allUsers.size(); i++) {
             UUID id = allUsers.get(i).getUUID("id");
-            for(int j = 0; j < 10; j++) {
+            for (int j = 0; j < 10; j++) {
                 executor.writeToClickStreamWithTTL(id,
                         DateTime.now().plusSeconds(j).toDate(),
                         "http://localhost/" + i + "/" + j, 100);
@@ -94,7 +96,6 @@ public class CassandraExecutorTest extends AbstractTest {
             List<Row> all = rows.all();
             logger.info("Found : " + all.size() + " links in the stream of user " + id);
         }
-
     }
 
     @Test
@@ -111,7 +112,6 @@ public class CassandraExecutorTest extends AbstractTest {
             ResultSet rows = id.get();
             logger.info(rows.all().size());
         }
-
     }
 
     @Ignore
@@ -119,8 +119,8 @@ public class CassandraExecutorTest extends AbstractTest {
     public void should_batch_write_users() throws Exception {
         List<UUID> writtenIds = new ArrayList<UUID>();
         List<String> queries = new ArrayList<String>();
-        for(int i = 0; i < 20; i++) {
-            User user = loadUser((i % 4)+1);
+        for (int i = 0; i < 20; i++) {
+            User user = loadUser((i % 4) + 1);
             writtenIds.add(user.getId());
             queries.add(QueryBuilder.insertInto("user") //
                     .value("id", user.getId()) //
@@ -132,9 +132,7 @@ public class CassandraExecutorTest extends AbstractTest {
         executor.batchWriteUsers(queries);
     }
 
-
     ///////// UTILITY METHODS ///////////
-
     private Set<Track> loadTracks() throws Exception {
         Set<Track> tracks = new HashSet<Track>();
         URL resourceAsStream = getClass().getClassLoader().getResource("data/tracks");
@@ -155,7 +153,7 @@ public class CassandraExecutorTest extends AbstractTest {
     }
 
     private User loadUser(Integer i) throws Exception {
-        URL resourceAsStream = getClass().getClassLoader().getResource("data/user"+i+".json");
+        URL resourceAsStream = getClass().getClassLoader().getResource("data/user" + i + ".json");
         User user = JacksonReader.readJsonFile(User.class, new File(resourceAsStream.toURI()));
         UUID uuid = UUIDs.random();
         user.setId(uuid);

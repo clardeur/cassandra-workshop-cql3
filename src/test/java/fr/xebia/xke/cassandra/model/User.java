@@ -1,7 +1,8 @@
 package fr.xebia.xke.cassandra.model;
 
-import java.util.UUID;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
