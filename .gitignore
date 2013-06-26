@@ -1,4 +1,12 @@
-apache-cassandra-1.2.4/
 .idea/
 target/
-.idea
+*.iml
+.project
+.metadata
+*.tmp
+*.bak
+*.swp
+*~.nib
+.classpath
+.settings/
+.loadpath
