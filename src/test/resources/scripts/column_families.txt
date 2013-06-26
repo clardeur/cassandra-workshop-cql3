@@ -1,6 +1,4 @@
-/* Column Family Users */
-
-create table user(
+CREATE TABLE user(
     id uuid PRIMARY KEY
     , name varchar
     , email varchar
@@ -8,9 +6,7 @@ create table user(
     , age int
 );
 
-/* Column Family Tracks */
-
-create table tracks (
+CREATE TABLE tracks (
     id timeuuid PRIMARY KEY
     , title varchar
     , release timestamp
@@ -18,18 +14,14 @@ create table tracks (
     , tags set<varchar>
 );
 
-/* Column Family Click Stream */
-
-create table user_click_stream (
+CREATE TABLE user_click_stream (
     user_id uuid
     , when timestamp
     , url varchar
     , PRIMARY KEY(user_id, when)
 );
 
-/* Column Family Liked Tracks */
-
-create table track_likes (
+CREATE TABLE track_likes (
     user_id uuid
     , track_id timeuuid
     , PRIMARY KEY (user_id, track_id)

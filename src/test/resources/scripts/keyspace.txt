@@ -1,1 +1,1 @@
-create keyspace workshop with replication = { 'class': 'SimpleStrategy', 'replication_factor': 2 };
+CREATE KEYSPACE workshop WITH REPLICATION = { 'class': 'SimpleStrategy', 'replication_factor': 2 };
