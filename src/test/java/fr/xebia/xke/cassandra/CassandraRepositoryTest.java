@@ -26,7 +26,6 @@ import static java.lang.String.format;
 import static org.apache.commons.lang.math.RandomUtils.nextInt;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.joda.time.DateTime.now;
-import static org.junit.Assert.assertEquals;
 
 public class CassandraRepositoryTest extends AbstractTest {
 
@@ -55,7 +54,8 @@ public class CassandraRepositoryTest extends AbstractTest {
         User user = newRandomUser();
         repository.writeUserWithBoundStatement(user);
         ResultSet rows = repository.readUserWithQueryBuilder(user.getId());
-        assertEquals(user.getId(), rows.one().getUUID("id"));
+        assertThat(rows).isNotNull();
+        assertThat(rows.one().getUUID("id")).isEqualTo(user.getId());
     }
 
     @Test
@@ -89,8 +89,9 @@ public class CassandraRepositoryTest extends AbstractTest {
         }
         for (User user : users) {
             ResultSet rows = repository.readClickStreamByTimeframe(user.getId(), now().minusSeconds(5).toDate(), now().plusSeconds(5).toDate());
+            assertThat(rows).isNotNull();
             List<Row> clicks = rows.all();
-            assertThat(clicks).isNotEmpty();
+            assertThat(clicks).isNotNull().isNotEmpty();
             LOG.info(format("found %d links into the stream for user '%s'", clicks.size(), user.getName()));
         }
     }
@@ -107,6 +108,7 @@ public class CassandraRepositoryTest extends AbstractTest {
                 }
             });
             ResultSetFuture resultSetFuture = repository.writeAndReadLikesAsynchronously(user, likeTracks);
+            assertThat(resultSetFuture).isNotNull();
             List<Row> rows = resultSetFuture.get().all();
             assertThat(rows).isNotEmpty();
             LOG.info(format("found %d like tracks for user '%s'", rows.size(), user.getName()));
