@@ -1,6 +1,6 @@
 CREATE TABLE user(
     id uuid PRIMARY KEY
-    , title varchar
+    , name varchar
     , email varchar
     , password varchar
     , age int
