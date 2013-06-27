@@ -6,11 +6,11 @@
 
     <properties>
         <cassandra-driver.version>1.0.0</cassandra-driver.version>
-        <snappy-java.version>1.0.4.1</snappy-java.version>
+        <snappy-java.version>1.0.5</snappy-java.version>
         <log4j.version>1.2.17</log4j.version>
         <jackson-mapper-asl.version>1.9.2</jackson-mapper-asl.version>
         <joda-time.version>2.2</joda-time.version>
-        <junit.version>4.10</junit.version>
+        <junit.version>4.11</junit.version>
         <fest-assert.version>1.4</fest-assert.version>
     </properties>
 
@@ -69,15 +69,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <licenses>
-        <license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>Apache License Version 2.0</comments>
-        </license>
-    </licenses>
 
     <scm>
         <connection>scm:git:git@github.com:Igosuki/workshop-cassandra-cql.git</connection>
