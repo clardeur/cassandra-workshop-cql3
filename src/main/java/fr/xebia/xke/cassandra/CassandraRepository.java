@@ -1,8 +1,6 @@
 package fr.xebia.xke.cassandra;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import fr.xebia.xke.cassandra.model.Track;
 import fr.xebia.xke.cassandra.model.User;
@@ -12,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import static java.lang.String.format;
 
 public class CassandraRepository {
 
@@ -100,5 +100,23 @@ public class CassandraRepository {
      * @see QueryBuilder
      */
     public void batchWriteUsers(List<String> insertQueries) {
+    }
+
+    private void printTrace(ExecutionInfo executionInfo) {
+        LOG.trace("Host (queried)\t: {}", executionInfo.getQueriedHost());
+        for (Host host : executionInfo.getTriedHosts()) {
+            LOG.trace("Host (tried)\t: {}", host);
+        }
+        QueryTrace queryTrace = executionInfo.getQueryTrace();
+        LOG.trace("Trace id\t\t: {}", queryTrace.getTraceId());
+        LOG.trace("---------------------------------------+---------------+------------+--------------");
+        LOG.trace("              DESCRIPTION                  TIMESTAMP        SRC       SRC ELPASED  ");
+        LOG.trace("---------------------------------------+---------------+------------+--------------");
+        for (QueryTrace.Event event : queryTrace.getEvents()) {
+            LOG.trace(format("%38s | %12s | %10s | %12s", event.getDescription(),
+                    event.getTimestamp(),
+                    event.getSource(), event.getSourceElapsedMicros()));
+        }
+        LOG.trace("---------------------------------------+---------------+------------+--------------");
     }
 }
