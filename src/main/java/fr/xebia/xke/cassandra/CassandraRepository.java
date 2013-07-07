@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static java.lang.String.format;
 
 public class CassandraRepository {
 
@@ -123,7 +124,7 @@ public class CassandraRepository {
             );
         }
         return session.executeAsync(
-                select().all().from("track_likes").where(eq("user_id", user.getId())).limit(1000)
+                select().all().from("track_likes").where(eq("user_id", user.getId()))
         );
     }
 
@@ -141,5 +142,23 @@ public class CassandraRepository {
         }
         batch.setConsistencyLevel(ConsistencyLevel.ALL).enableTracing();
         session.execute(batch);
+    }
+
+    private void printTrace(ExecutionInfo executionInfo) {
+        LOG.trace("Host (queried)\t: {}", executionInfo.getQueriedHost());
+        for (Host host : executionInfo.getTriedHosts()) {
+            LOG.trace("Host (tried)\t: {}", host);
+        }
+        QueryTrace queryTrace = executionInfo.getQueryTrace();
+        LOG.trace("Trace id\t\t: {}", queryTrace.getTraceId());
+        LOG.trace("---------------------------------------+---------------+------------+--------------");
+        LOG.trace("              DESCRIPTION                  TIMESTAMP        SRC       SRC ELPASED  ");
+        LOG.trace("---------------------------------------+---------------+------------+--------------");
+        for (QueryTrace.Event event : queryTrace.getEvents()) {
+            LOG.trace(format("%38s | %12s | %10s | %12s", event.getDescription(),
+                    event.getTimestamp(),
+                    event.getSource(), event.getSourceElapsedMicros()));
+        }
+        LOG.trace("---------------------------------------+---------------+------------+--------------");
     }
 }
