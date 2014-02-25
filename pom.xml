@@ -4,17 +4,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <properties>
-        <cassandra-driver.version>2.0.0-rc3</cassandra-driver.version>
-        <snappy-java.version>1.1.0</snappy-java.version>
-        <log4j.version>1.2.17</log4j.version>
-        <jackson-mapper-asl.version>1.9.2</jackson-mapper-asl.version>
-        <joda-time.version>2.3</joda-time.version>
-        <junit.version>4.11</junit.version>
-        <fest-assert.version>1.4</fest-assert.version>
-        <lz4.version>1.2.0</lz4.version>
-    </properties>
-
     <parent>
         <groupId>com.datastax.cassandra</groupId>
         <artifactId>cassandra-driver-examples-parent</artifactId>
@@ -23,6 +12,29 @@
 
     <artifactId>workshop-cassandra-cql</artifactId>
     <packaging>jar</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+
+        <!-- Cassandra -->
+        <cassandra-driver.version>2.0.0-rc3</cassandra-driver.version>
+        <snappy-java.version>1.1.0</snappy-java.version>
+        <lz4.version>1.2.0</lz4.version>
+
+        <!-- Utils -->
+        <joda-time.version>2.3</joda-time.version>
+        <jackson-mapper-asl.version>1.9.2</jackson-mapper-asl.version>
+        <guava.version>16.0.1</guava.version>
+
+        <!-- Log -->
+        <log4j.version>1.2.17</log4j.version>
+
+        <!-- Test -->
+        <junit.version>4.11</junit.version>
+        <fest-assert.version>1.4</fest-assert.version>
+    </properties>
 
     <dependencies>
         <!-- Cassandra -->
@@ -42,7 +54,6 @@
             <version>${lz4.version}</version>
         </dependency>
 
-
         <!-- Log -->
         <dependency>
             <groupId>log4j</groupId>
@@ -61,6 +72,11 @@
             <artifactId>jackson-mapper-asl</artifactId>
             <version>${jackson-mapper-asl.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
 
         <!-- Test -->
         <dependency>
@@ -76,5 +92,20 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
