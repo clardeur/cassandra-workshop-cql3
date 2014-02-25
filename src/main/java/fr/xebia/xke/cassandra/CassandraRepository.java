@@ -1,19 +1,36 @@
 package fr.xebia.xke.cassandra;
 
-import com.datastax.driver.core.*;
-import com.datastax.driver.core.querybuilder.Batch;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import fr.xebia.xke.cassandra.model.Track;
-import fr.xebia.xke.cassandra.model.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.batch;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.gt;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.lt;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
+import static java.lang.String.format;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
-import static java.lang.String.format;
+import fr.xebia.xke.cassandra.model.Track;
+import fr.xebia.xke.cassandra.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.ExecutionInfo;
+import com.datastax.driver.core.Host;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.QueryTrace;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.querybuilder.Batch;
+import com.datastax.driver.core.querybuilder.Insert;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class CassandraRepository {
 
@@ -62,7 +79,7 @@ public class CassandraRepository {
      */
     public void writeTracksWithQueryBuilder(Iterable<Track> tracks) {
         for (Track track : tracks) {
-            Query insert = insertInto("tracks")
+            Insert insert = insertInto("tracks")
                     .value("id", track.getId())
                     .value("title", track.getTitle())
                     .value("release", track.getRelease())
@@ -127,7 +144,6 @@ public class CassandraRepository {
                 select().all().from("track_likes").where(eq("user_id", user.getId()))
         );
     }
-
 
     /**
      * Batch query.

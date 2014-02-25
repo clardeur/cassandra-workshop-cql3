@@ -1,11 +1,25 @@
 package fr.xebia.xke.cassandra;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.utils.UUIDs;
-import com.google.common.base.Predicate;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.google.common.collect.Sets.filter;
+import static fr.xebia.xke.cassandra.JacksonReader.readJsonFile;
+import static java.lang.String.format;
+import static org.fest.assertions.Assertions.assertThat;
+import static org.joda.time.DateTime.now;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import fr.xebia.xke.cassandra.model.Track;
 import fr.xebia.xke.cassandra.model.User;
 import org.apache.log4j.Logger;
@@ -13,25 +27,18 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.google.common.collect.Sets.filter;
-import static fr.xebia.xke.cassandra.JacksonReader.readJsonFile;
-import static java.lang.String.format;
-import static org.apache.commons.lang.math.RandomUtils.nextInt;
-import static org.fest.assertions.Assertions.assertThat;
-import static org.joda.time.DateTime.now;
-import static org.junit.Assert.assertEquals;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.utils.UUIDs;
+import com.google.common.base.Predicate;
 
 public class CassandraRepositoryTest extends AbstractTest {
 
     private static final Logger LOG = Logger.getLogger(CassandraRepositoryTest.class);
 
+    public static final Random RANDOM = new Random();
     public static final String URL = "http://cassandra.apache.org/download/";
     public static final int _1_SEC_TLL = 1;
     public static final int _10_SEC_TLL = 10;
@@ -82,7 +89,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     public void should_read_click_stream() throws Exception {
         Set<User> users = loadUsers();
         for (User user : users) {
-            int x = nextInt(10) + 1;
+            int x = RANDOM.nextInt(10) + 1;
             for (int i = 0; i < x; i++) {
                 repository.writeToClickStreamWithTTL(user.getId(), now().toDate(), URL, _10_SEC_TLL);
             }
@@ -103,7 +110,7 @@ public class CassandraRepositoryTest extends AbstractTest {
             Set<Track> likeTracks = filter(tracks, new Predicate<Track>() {
                 @Override
                 public boolean apply(Track track) {
-                    return nextInt(10) % 3 == 0;
+                    return RANDOM.nextInt(10) % 3 == 0;
                 }
             });
             ResultSetFuture resultSetFuture = repository.writeAndReadLikesAsynchronously(user, likeTracks);
@@ -128,7 +135,7 @@ public class CassandraRepositoryTest extends AbstractTest {
                     .value("id", user.getId()) //
                     .value("name", user.getName()) //
                     .value("email", user.getEmail()) //
-                    .value("age", nextInt(100))//
+                    .value("age", RANDOM.nextInt(100))//
                     .toString());
         }
         repository.batchWriteUsers(queries);
@@ -161,18 +168,18 @@ public class CassandraRepositoryTest extends AbstractTest {
             User user = readJsonFile(User.class, new File(resourceAsStream.toURI()));
             UUID uuid = UUIDs.random();
             user.setId(uuid);
-            user.setAge(nextInt(100));
+            user.setAge(RANDOM.nextInt(100));
             users.add(user);
         }
         return users;
     }
 
     private User newRandomUser() throws Exception {
-        URL resourceAsStream = getClass().getClassLoader().getResource(format("data/user%d.json", nextInt(5) + 1));
+        URL resourceAsStream = getClass().getClassLoader().getResource(format("data/user%d.json", RANDOM.nextInt(5) + 1));
         User user = readJsonFile(User.class, new File(resourceAsStream.toURI()));
         UUID uuid = UUIDs.random();
         user.setId(uuid);
-        user.setAge(nextInt(100));
+        user.setAge(RANDOM.nextInt(100));
         return user;
     }
 
