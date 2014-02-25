@@ -33,28 +33,24 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.base.Predicate;
+import com.google.common.io.Resources;
 
 public class CassandraRepositoryTest extends AbstractTest {
 
     private static final Logger LOG = Logger.getLogger(CassandraRepositoryTest.class);
 
-    public static final Random RANDOM = new Random();
-    public static final String URL = "http://cassandra.apache.org/download/";
-    public static final int _1_SEC_TLL = 1;
-    public static final int _10_SEC_TLL = 10;
-
     private CassandraRepository repository;
 
     @Before
     public void setUp() throws Exception {
-        repository = new CassandraRepository(session());
+        repository = new CassandraRepository(session);
     }
 
     @Test
     public void should_write_user_with_statement() throws Exception {
         User user = newRandomUser();
         repository.writeUserWithBoundStatement(user);
-        assertThat(session().execute(format("SELECT * FROM user WHERE id=%s", user.getId())).one()).isNotNull();
+        assertThat(session.execute(format("SELECT * FROM user WHERE id=%s", user.getId())).one()).isNotNull();
     }
 
     @Test
@@ -69,7 +65,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     public void should_write_track() throws Exception {
         Set<Track> tracks = loadTracks();
         repository.writeTracksWithQueryBuilder(tracks);
-        ResultSet rows = session().execute(select().all().from("tracks"));
+        ResultSet rows = session.execute(select().all().from("tracks"));
         assertThat(rows.all()).hasSize(tracks.size());
     }
 
@@ -77,21 +73,21 @@ public class CassandraRepositoryTest extends AbstractTest {
     public void should_write_click_stream_with_ttl() throws Exception {
         for (int j = 0; j < 20; j++) {
             User user = newRandomUser();
-            repository.writeToClickStreamWithTTL(user.getId(), now().toDate(), URL, _1_SEC_TLL);
+            repository.writeToClickStreamWithTTL(user.getId(), now().toDate(), "http://cassandra.apache.org/download/", 1);
         }
-        assertThat(session().execute(select().all().from("user_click_stream")).all()).isNotEmpty();
+        assertThat(session.execute(select().all().from("user_click_stream")).all()).isNotEmpty();
         TimeUnit.SECONDS.sleep(3);
         LOG.info("Waiting 3 seconds...");
-        assertThat(session().execute(select().all().from("user_click_stream")).all()).isEmpty();
+        assertThat(session.execute(select().all().from("user_click_stream")).all()).isEmpty();
     }
 
     @Test
     public void should_read_click_stream() throws Exception {
         Set<User> users = loadUsers();
         for (User user : users) {
-            int x = RANDOM.nextInt(10) + 1;
+            int x = new Random().nextInt(10) + 1;
             for (int i = 0; i < x; i++) {
-                repository.writeToClickStreamWithTTL(user.getId(), now().toDate(), URL, _10_SEC_TLL);
+                repository.writeToClickStreamWithTTL(user.getId(), now().toDate(), "http://cassandra.apache.org/download/", 10);
             }
         }
         for (User user : users) {
@@ -108,9 +104,10 @@ public class CassandraRepositoryTest extends AbstractTest {
         Set<User> users = loadUsers();
         for (User user : users) {
             Set<Track> likeTracks = filter(tracks, new Predicate<Track>() {
+
                 @Override
                 public boolean apply(Track track) {
-                    return RANDOM.nextInt(10) % 3 == 0;
+                    return new Random().nextInt(10) % 3 == 0;
                 }
             });
             ResultSetFuture resultSetFuture = repository.writeAndReadLikesAsynchronously(user, likeTracks);
@@ -126,16 +123,14 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     @Ignore
     public void should_batch_write_users() throws Exception {
-        List<UUID> writtenIds = new ArrayList<UUID>();
-        List<String> queries = new ArrayList<String>();
+        List<String> queries = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             User user = newRandomUser();
-            writtenIds.add(user.getId());
             queries.add(QueryBuilder.insertInto("user") //
                     .value("id", user.getId()) //
                     .value("name", user.getName()) //
                     .value("email", user.getEmail()) //
-                    .value("age", RANDOM.nextInt(100))//
+                    .value("age", new Random().nextInt(100))//
                     .toString());
         }
         repository.batchWriteUsers(queries);
@@ -143,10 +138,11 @@ public class CassandraRepositoryTest extends AbstractTest {
 
     ///////// UTILITY METHODS ///////////
     private Set<Track> loadTracks() throws Exception {
-        Set<Track> tracks = new HashSet<Track>();
-        URL resourceAsStream = getClass().getClassLoader().getResource("data/tracks");
+        Set<Track> tracks = new HashSet<>();
+        URL resourceAsStream = Resources.getResource("data/tracks");
         File directory = new File(resourceAsStream.toURI());
         File[] files = directory.listFiles(new FilenameFilter() {
+
             @Override
             public boolean accept(File dir, String name) {
                 return name.endsWith(".json");
@@ -162,24 +158,24 @@ public class CassandraRepositoryTest extends AbstractTest {
     }
 
     private Set<User> loadUsers() throws Exception {
-        Set<User> users = new HashSet<User>();
+        Set<User> users = new HashSet<>();
         for (int i = 1; i < 6; i++) {
-            URL resourceAsStream = getClass().getClassLoader().getResource(format("data/user%d.json", i));
+            URL resourceAsStream = Resources.getResource(format("data/user%d.json", i));
             User user = readJsonFile(User.class, new File(resourceAsStream.toURI()));
             UUID uuid = UUIDs.random();
             user.setId(uuid);
-            user.setAge(RANDOM.nextInt(100));
+            user.setAge(new Random().nextInt(100));
             users.add(user);
         }
         return users;
     }
 
     private User newRandomUser() throws Exception {
-        URL resourceAsStream = getClass().getClassLoader().getResource(format("data/user%d.json", RANDOM.nextInt(5) + 1));
+        URL resourceAsStream = Resources.getResource(format("data/user%d.json", new Random().nextInt(5) + 1));
         User user = readJsonFile(User.class, new File(resourceAsStream.toURI()));
         UUID uuid = UUIDs.random();
         user.setId(uuid);
-        user.setAge(RANDOM.nextInt(100));
+        user.setAge(new Random().nextInt(100));
         return user;
     }
 
