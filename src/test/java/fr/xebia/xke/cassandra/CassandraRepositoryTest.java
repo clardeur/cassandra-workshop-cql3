@@ -93,16 +93,16 @@ public class CassandraRepositoryTest extends AbstractTest {
     public void should_insert_a_click_stream_with_ttl() throws Exception {
         // Given
         User user = newRandomUser();
-        int _1_SEC_TTL = 1;
+        int _5_SEC_TTL = 5;
 
         // When
-        repository.insertUserClickStreamWithTTL(user.getId(), now().toDate(), "http://cassandra.apache.org/download/", _1_SEC_TTL);
+        repository.insertUserClickStreamWithTTL(user.getId(), now().toDate(), "http://cassandra.apache.org/download/", _5_SEC_TTL);
 
         // Then
         assertThat(session.execute("SELECT * FROM user_click_stream").all()).isNotEmpty();
 
-        LOG.info("Waiting 3 seconds...");
-        TimeUnit.SECONDS.sleep(3);
+        LOG.info("Waiting 10 seconds...");
+        TimeUnit.SECONDS.sleep(10);
 
         assertThat(session.execute(select().all().from("user_click_stream")).all()).isEmpty();
     }
@@ -156,7 +156,7 @@ public class CassandraRepositoryTest extends AbstractTest {
         }
 
         // Then
-        assertThat(session.execute("SELECT * FROM track_likes")).hasSize(tracks.size());
+        assertThat(session.execute("SELECT * FROM track_likes").all()).hasSize(tracks.size());
     }
 
     @Test
