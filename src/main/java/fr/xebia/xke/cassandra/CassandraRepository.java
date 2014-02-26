@@ -10,7 +10,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.ttl;
 import static java.lang.String.format;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import fr.xebia.xke.cassandra.model.Track;
@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.PreparedStatement;
@@ -27,10 +26,9 @@ import com.datastax.driver.core.QueryTrace;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Batch;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.utils.UUIDs;
 
 public class CassandraRepository {
 
@@ -43,63 +41,63 @@ public class CassandraRepository {
     }
 
     /**
-     * Save an user by using a BoundStatement.
+     * Save an user by using a CQL query string.
      * <p/>
-     * http://www.datastax.com/doc-source/developer/java-driver/#quick_start/qsSimpleClientBoundStatements_t.html
-     *
-     * @param user the user to save
+     * http://www.datastax.com/documentation/cql/3.0/cql/cql_reference/insert_r.html
      */
-    public void writeUserWithBoundStatement(User user) {
-        PreparedStatement preparedStatement = session.prepare("INSERT INTO user (id, name, email, age) VALUES (?,?,?,?)");
-        BoundStatement boundStatement = preparedStatement.bind(user.getId(), user.getName(), user.getEmail(), user.getAge());
-        boundStatement.setConsistencyLevel(ConsistencyLevel.ANY);
+    public void insertUserWithQueryString(User user) {
         LOG.debug("insert user: {}", user);
-        session.execute(boundStatement);
+        session.execute("INSERT INTO user (id, name, email, age) VALUES (?,?,?,?)",
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getAge());
     }
 
     /**
-     * Read a user with by using a QueryBuilder.
-     * <p/>
-     * http://www.datastax.com/doc-source/developer/java-driver/#reference/queryBuilder_r.html
-     *
-     * @param id the user id
-     * @return a ResultSet of users
+     * Save an user by using a {@link com.datastax.driver.core.querybuilder.QueryBuilder}.
      */
-    public ResultSet readUserWithQueryBuilder(UUID id) {
-        return session.execute(select().all().from("user")
-                .where(eq("id", id)));
+    public void insertUserWithQueryBuilder(User user) {
+        LOG.debug("insert user: {}", user);
+        session.execute(insertInto("user")
+                .value("id", user.getId())
+                .value("name", user.getName())
+                .value("email", user.getEmail())
+                .value("age", user.getAge()));
     }
 
     /**
-     * Insert a track with by using a QueryBuilder.
-     * <p/>
-     * http://www.datastax.com/doc-source/developer/java-driver/#reference/queryBuilder_r.html
-     *
-     * @param tracks track to save
+     * Read a user with by using a {@link com.datastax.driver.core.querybuilder.QueryBuilder}..
      */
-    public void writeTracksWithQueryBuilder(Iterable<Track> tracks) {
+    public ResultSet findUserWithQueryBuilder(UUID id) {
+        return session.execute(select().from("user").where(eq("id", id)));
+    }
+
+    /**
+     * Insert a track with by using a {@link com.datastax.driver.core.PreparedStatement}.
+     */
+    public void insertTracksWithPreparedStatement(Iterable<Track> tracks) {
+        PreparedStatement preparedStatement = session.prepare("INSERT INTO tracks (id, title, release, duration, tags) VALUES (?,?,?,?,?)");
         for (Track track : tracks) {
-            Insert insert = insertInto("tracks")
-                    .value("id", track.getId())
-                    .value("title", track.getTitle())
-                    .value("release", track.getRelease())
-                    .value("duration", track.getDuration())
-                    .value("tags", track.getTags());
             LOG.debug("insert track: {}", track);
-            session.execute(insert);
+            BoundStatement boundStatement = preparedStatement.bind(
+                    track.getId(),
+                    track.getTitle(),
+                    track.getRelease(),
+                    track.getDuration(),
+                    track.getTags());
+            session.execute(boundStatement);
         }
     }
 
     /**
      * Save an user click into a stream table.
+     * </p>
+     * {@link com.datastax.driver.core.querybuilder.Using}
      *
-     * @param userId the user ID
-     * @param when   the timestamp of the click
-     * @param url    the url where the user has cliked
-     * @param ttl    the Time To Live (TTL)
-     * @see com.datastax.driver.core.querybuilder.Using
+     * @param ttl the TTL (Time To Live) in seconds
      */
-    public void writeToClickStreamWithTTL(UUID userId, Date when, String url, Integer ttl) {
+    public void insertUserClickStreamWithTTL(UUID userId, Date when, String url, int ttl) {
         LOG.debug("insert into user_click_stream [{}, {}]", userId, when.getTime());
         session.execute(insertInto("user_click_stream")
                 .value("user_id", userId)
@@ -109,14 +107,9 @@ public class CassandraRepository {
     }
 
     /**
-     * Read user click stream between two dates.
-     *
-     * @param userId the user ID
-     * @param start  start date of the time frame
-     * @param end    end date of the time frame
-     * @return a ResultSet of user click stream
+     * Read user click stream between two dates asynchronously.
      */
-    public ResultSet readClickStreamByTimeframe(UUID userId, Date start, Date end) {
+    public ResultSet findUserClicksStreamWithinTimeFrame(UUID userId, Date start, Date end) {
         return session.execute(select().from("user_click_stream")
                 .where(eq("user_id", userId))
                 .and(gt("when", start))
@@ -124,43 +117,44 @@ public class CassandraRepository {
     }
 
     /**
-     * Execute an async query.
-     * <p/>
-     * http://www.datastax.com/doc-source/developer/java-driver/#asynchronous_t.html
-     *
-     * @param user   the user who like some tracks
-     * @param tracks the list of tracks
-     * @return a ResultSetFuture
+     * Find user clicks stream by using pagination.
+     * </p>
+     * {@link {@link com.datastax.driver.core.Statement#setFetchSize(int)}}
      */
-    public ResultSetFuture writeAndReadLikesAsynchronously(User user, Iterable<Track> tracks) {
-        for (Track track : tracks) {
-            session.executeAsync(
-                    insertInto("track_likes")
-                            .value("user_id", user.getId())
-                            .value("track_id", track.getId())
-            );
-        }
+    public ResultSet findUserClicksStreamByPage(UUID userId, int pageSize) {
+        return session.execute(select().from("user_click_stream").where(eq("user_id", userId)).setFetchSize(pageSize));
+    }
+
+    /**
+     * Execute an async write query {@link com.datastax.driver.core.Session#executeAsync(Statement)}
+     */
+    public ResultSetFuture insertUserTrackLikesAsync(UUID userId, UUID trackId) {
+        LOG.debug("insert into track_likes [{}, {}]", userId, trackId);
         return session.executeAsync(
-                select().all().from("track_likes").where(eq("user_id", user.getId()))
+                insertInto("track_likes")
+                        .value("user_id", userId)
+                        .value("track_id", trackId)
         );
     }
 
     /**
-     * Batch query.
-     *
-     * @param insertQueries insert queries
-     * @see QueryBuilder
+     * Use a batch query {@link com.datastax.driver.core.querybuilder.Batch}
      */
-    public void batchWriteUsers(List<String> insertQueries) {
+    public void insertUserTrackLikesByBatch(UUID userId, Set<Track> tracks) {
         Batch batch = batch();
-        for (String insertQuery : insertQueries) {
-            batch.add(new SimpleStatement(insertQuery));
+        for (Track track : tracks) {
+            LOG.debug("insert into track_likes [{}, {}]", UUIDs.random(), track.getId());
+            batch.add(insertInto("track_likes").value("user_id", userId).value("track_id", track.getId()));
         }
-        batch.setConsistencyLevel(ConsistencyLevel.ALL).enableTracing();
         session.execute(batch);
     }
 
-    private void printTrace(ExecutionInfo executionInfo) {
+    /**
+     * Utility method to print a query trace.
+     * </p>
+     * {@link com.datastax.driver.core.Statement#enableTracing()}
+     */
+    void printTrace(ExecutionInfo executionInfo) {
         LOG.trace("Host (queried)\t: {}", executionInfo.getQueriedHost());
         for (Host host : executionInfo.getTriedHosts()) {
             LOG.trace("Host (tried)\t: {}", host);

@@ -16,10 +16,11 @@ import org.junit.BeforeClass;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
 import com.google.common.io.Resources;
 
 public class AbstractTest {
+
+    public static final String WORKSHOP_KEYSPACE = "workshop";
 
     protected static Session session;
 
@@ -33,7 +34,7 @@ public class AbstractTest {
             runScript(session, Resources.getResource("scripts/create-keyspace.cql"));
         }
 
-        session = cluster.connect("workshop");
+        session = cluster.connect(WORKSHOP_KEYSPACE);
 
         runScript(session, Resources.getResource("scripts/create-tables.cql"));
     }
@@ -47,8 +48,7 @@ public class AbstractTest {
 
     @After
     public void cleanUp() {
-        SimpleStatement st = new SimpleStatement("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name=?", "workshop");
-        List<Row> rows = session.execute(st).all();
+        List<Row> rows = session.execute("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name=?", WORKSHOP_KEYSPACE).all();
         for (Row row : rows) {
             session.execute(format("TRUNCATE %s", row.getString("columnfamily_name")));
         }
