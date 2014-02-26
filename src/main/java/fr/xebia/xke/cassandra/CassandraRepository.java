@@ -150,6 +150,13 @@ public class CassandraRepository {
     }
 
     /**
+     * {@link com.datastax.driver.core.Statement#enableTracing()}
+     */
+    public ResultSet findUserWithTracing(UUID userId) {
+        return session.execute(select().from("user").where(eq("id", userId)).enableTracing());
+    }
+
+    /**
      * Utility method to print a query trace.
      * </p>
      * {@link com.datastax.driver.core.Statement#enableTracing()}
@@ -162,7 +169,7 @@ public class CassandraRepository {
         QueryTrace queryTrace = executionInfo.getQueryTrace();
         LOG.trace("Trace id\t\t: {}", queryTrace.getTraceId());
         LOG.trace("---------------------------------------+---------------+------------+--------------");
-        LOG.trace("              DESCRIPTION                  TIMESTAMP        SRC       SRC ELPASED  ");
+        LOG.trace("              DESCRIPTION                  TIMESTAMP        SRC       SRC ELAPSED  ");
         LOG.trace("---------------------------------------+---------------+------------+--------------");
         for (QueryTrace.Event event : queryTrace.getEvents()) {
             LOG.trace(format("%38s | %12s | %10s | %12s", event.getDescription(),

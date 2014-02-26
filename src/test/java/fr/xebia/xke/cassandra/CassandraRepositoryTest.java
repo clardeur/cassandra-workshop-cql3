@@ -172,6 +172,19 @@ public class CassandraRepositoryTest extends AbstractTest {
         assertThat(session.execute("SELECT * FROM track_likes").all()).hasSize(tracks.size());
     }
 
+    @Test
+    public void should_enable_tracing_on_query() throws Exception {
+        // Given
+        User user = newRandomUser();
+
+        // When
+        ResultSet resultSet = repository.findUserWithTracing(user.getId());
+
+        // Then
+        assertThat(resultSet.getExecutionInfo().getQueryTrace()).isNotNull();
+        repository.printTrace(resultSet.getExecutionInfo());
+    }
+
     ///////// UTILITY METHODS ///////////
     private Set<Track> loadTracks() throws Exception {
         Set<Track> tracks = new HashSet<>();
