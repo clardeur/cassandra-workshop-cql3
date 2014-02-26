@@ -20,7 +20,7 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
 
         <!-- Cassandra -->
-        <cassandra-driver.version>2.0.0-rc3</cassandra-driver.version>
+        <cassandra-driver.version>2.0.0</cassandra-driver.version>
         <snappy-java.version>1.1.0</snappy-java.version>
         <lz4.version>1.2.0</lz4.version>
 
