@@ -1,41 +1,64 @@
 package fr.xebia.xke.cassandra;
 
+import static com.datastax.driver.core.Cluster.builder;
+import static java.lang.String.format;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.URL;
+import java.util.List;
+import java.util.Scanner;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
-import org.junit.After;
-import org.junit.BeforeClass;
-
-import java.util.List;
-
-import static com.datastax.driver.core.Cluster.builder;
+import com.google.common.io.Resources;
 
 public class AbstractTest {
 
-    private static Session session;
+    public static final String WORKSHOP_KEYSPACE = "workshop";
 
-    private static final String KEYSPACE = "workshop";
-    private static final String HOST = "localhost";
+    protected static Session session;
 
     @BeforeClass
-    public static void init() {
+    public static void globalSetUp() throws Exception {
         Cluster cluster = builder()
-                .addContactPoints(HOST)
+                .addContactPoints(InetAddress.getLoopbackAddress())
                 .build();
-        session = cluster.connect(KEYSPACE);
+
+        try (Session session = cluster.connect()) {
+            runScript(session, Resources.getResource("scripts/create-keyspace.cql"));
+        }
+
+        session = cluster.connect(WORKSHOP_KEYSPACE);
+
+        runScript(session, Resources.getResource("scripts/create-tables.cql"));
+    }
+
+    @AfterClass
+    public static void globalCleanUp() throws Exception {
+        if (session != null) {
+            session.close();
+        }
     }
 
     @After
     public void cleanUp() {
-        String listAllTables = "select columnfamily_name from system.schema_columnfamilies where keyspace_name='" + KEYSPACE + "'";
-        List<Row> rows = session.execute(listAllTables).all();
+        List<Row> rows = session.execute("SELECT columnfamily_name FROM system.schema_columnfamilies WHERE keyspace_name=?", WORKSHOP_KEYSPACE).all();
         for (Row row : rows) {
-            session.execute(new SimpleStatement("truncate " + row.getString("columnfamily_name")));
+            session.execute(format("TRUNCATE %s", row.getString("columnfamily_name")));
         }
     }
 
-    public static Session session() {
-        return session;
+    private static void runScript(Session session, URL url) throws Exception {
+        try (Scanner scanner = new Scanner(new File(url.toURI()))) {
+            while (scanner.hasNextLine()) {
+                session.execute(scanner.nextLine());
+            }
+        }
     }
 }
