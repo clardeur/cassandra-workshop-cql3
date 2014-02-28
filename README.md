@@ -79,7 +79,7 @@ Quelques liens utiles:
 - [La documentation sur le Driver Java](http://www.datastax.com/documentation/developer/java-driver/1.0/index.html)
 
 
-Bonus
+Bonus: Configurer un Cluster
 =================
 
 Former un cluster avec l'ensemble des machines et le visualiser avec nodetool, voir OpsCenter. 
