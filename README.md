@@ -22,9 +22,8 @@ Configuration
 Ajouter Cassandra à votre PATH.
 
     $ export CASSANDRA_HOME=$INSTALL_DIR/apache-cassandra-2.0.5
-    $ export PATH=$PATH:$CASSANDRA_HOME/bin
     
-Changer le repertoire par défaut `/var/lib/cassandra` où sont enregistrés les data et les logs. **(non obligatoire)**
+Changer le repertoire par défaut où sont enregistrés les data et les logs. **(non obligatoire)**
 
     $ sed -i.backup 's@/var/lib@/tmp@g' $CASSANDRA_HOME/conf/cassandra.yaml
     
@@ -33,9 +32,9 @@ Lancement
     
 Démmarer Cassandra en foreground.
 
-    $ cassandra -f
+    $ $CASSANDRA_HOME/bin/cassandra -f
     
-Pour le stopper, `Ctrl+C`.
+Pour le stopper, `Ctrl+C` ou en killant le processus.
 
 Workshop
 =================
