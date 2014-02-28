@@ -19,7 +19,7 @@ Si le téléchargement est lent, vous pouvez utiliser un autre [mirroir](http://
 Configuration
 ------
 
-Ajouter Cassandra à votre PATH.
+Configurer la variable d'enviornnement du HOME de Cassandra.
 
     $ export CASSANDRA_HOME=$INSTALL_DIR/apache-cassandra-2.0.5
     
