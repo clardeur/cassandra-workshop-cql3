@@ -23,10 +23,11 @@ public class AbstractTest {
     public static final String WORKSHOP_KEYSPACE = "workshop";
 
     protected static Session session;
+    private static Cluster cluster;
 
     @BeforeClass
     public static void globalSetUp() throws Exception {
-        Cluster cluster = builder()
+        cluster = builder()
                 .addContactPoints(InetAddress.getLoopbackAddress())
                 .build();
 
@@ -43,6 +44,9 @@ public class AbstractTest {
     public static void globalCleanUp() throws Exception {
         if (session != null) {
             session.close();
+        }
+        if (cluster != null) {
+            cluster.close();
         }
     }
 
