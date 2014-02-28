@@ -1,56 +1,47 @@
-Workshop Cassandra
+![alt text](http://cassandra.apache.org/media/img/cassandra_logo.png "cassandra_logo")
+
+Installation
 =================
 
-## Installer Cassandra
+Téléchargement
+------
 
-Télécharger la version 1.2 de Cassandra à l'adresse suivante: 
-- http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.6/apache-cassandra-1.2.6-bin.tar.gz
+Choisissez le repertoire où installer Cassandra. ( ex: `~` ou `/usr/local` )
 
-Ajoutez Cassandra dans le PATH.
+    $ INSTALL_DIR=/usr/local
 
-### Sous Linux/OSX
+Télécharger la version 2.0.5 de Cassandra.
 
-    $ export CASSANDRA_HOME=<...racine du répertoire Cassandra...>
+    $ curl http://apache.mirrors.multidist.eu/cassandra/2.0.5/apache-cassandra-2.0.5-bin.tar.gz | tar xz -C $INSTALL_DIR
+    
+Si le téléchargement est lent, vous pouvez utiliser un autre [mirroir](http://www.apache.org/dyn/closer.cgi?path=/cassandra/2.0.5/apache-cassandra-2.0.5-bin.tar.gz).
+    
+Configuration
+------
+
+Ajouter Cassandra à votre PATH.
+
+    $ export CASSANDRA_HOME=$INSTALL_DIR/apache-cassandra-2.0.5
     $ export PATH=$PATH:$CASSANDRA_HOME/bin
+    
+Changer le repertoire par défaut `/var/lib/cassandra` où sont enregistrés les data et les logs. **(non obligatoire)**
 
-### Sous Windows
+    $ sed -i.backup 's@/var/lib@/tmp@g' $CASSANDRA_HOME/conf/cassandra.yaml
+    
+Lancement
+------
+    
+Démmarer Cassandra en foreground.
 
-    set CASSANDRA_HOME=<...racine du répertoire Cassandra...>
-    set PATH=%PATH%;%CASSANDRA_HOME\bin
+    $ cassandra -f
+    
+Pour le stopper, `Ctrl+C`.
 
-## Réglages complémentaires
-
-Pour activer le protocole CQL natif remplacez dans `$CASSANDRA_HOME/cassandra.yaml` :
-
-    start_native_transport: true
-
-## Création du Keyspace (Database)
-
-Exécuter le script `keyspace.txt` :
-
-    $ cqlsh < ./src/test/resources/scripts/keyspace.txt
-
-Connectez-vous avec cqlsh et vérifiez que le keyspace a bien été créé:
-
-    $ cqlsh
-    $ DESC KEYSPACE workshop;
-    $ exit
-
-## Création des column families (Table)
-
-Exécuter le script `column_families.txt` :
-
-    $ cqlsh -k workshop < ./src/test/resources/scripts/column_families.txt
-
-Connectez-vous avec cqlsh et vérifiez que les tables ont bien été créées:
-
-    $ cqlsh
-    $ USE workshop;
-    $ DESC TABLES;
-    $ exit
-
-Sujet du Workshop
+Workshop
 =================
+
+Pitch
+------
 
 Nous sommes une startup ambitieuse qui souhaite créer un spinoff de LastFM,
 bien entendu supérieur.
@@ -59,60 +50,38 @@ Nous estimons que la demande nous apportera plusieurs millions d'utilisateurs
 très rapidement. Nous avons donc choisi Cassandra, réputé pour ses performances
 et sa scalabilité linéaire.
 
+Si cela n'est pas encore fait, clonez le repository.
+
+    $   git clone https://github.com/clardeur/cassandra-workshop-cql3.git
+    
+Keyspace et Tables
+------
+
+Le Keyspace et les Tables seront initialisées automatiquement dans Cassandra, lors du lancement des tests.
+
+Si vous souhaitez consulter les scripts de création, il s'agit des fichiers `create-tables.cql` et `create-keyspace.cql` qui se trouvent dans le repertoire `src/main/resources/script` du projet.
+
+Pour visualiser le schéma des tables, utiliser l'outil `cqlsh` et tapez `help` pour avoir la liste des commandes.
+
+    $ $CASSANDRA_HOME/bin/cqlsh
+    > help
+    
+N'hésitez pas à abuser votre touche TAB pour l'autocomplétion.
+
+Objectif
+------
+
 Le but de l'exercice est de faire passer les tests unitaires dans l'ordre des
-méthodes de la classe  `CassandraRepositoryTest.java`.
+méthodes de la classe `CassandraRepositoryTest.java`.
 
-La documentation du driver Datastax se trouve ici : http://www.datastax.com/doc-source/developer/java-driver/
+Quelques liens utiles:
 
-### Exercice 1
+- Le langage CQL3 : http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/cqlCommandsTOC.html
+- Le driver Java : http://www.datastax.com/documentation/developer/java-driver/1.0/index.html
 
-Ecrire dans la table des users avec un statement statique.
 
-### Exercice 2
-
-Lire de la table des users
-
-### Exercice 3
-
-Insérer une track et sa collection de tags avec.
-
-### Exercice 4
-
-Ecrire dans la table du click stream avec le ttl précisé
-
-### Exercice 5
-
-Lire de la table des click streams entre 2 timestamps
-
-### Exercice 6
-
-Ecrire et des likes de user sur des tracks, de manière asynchrone
-
-### Exercice 7
-
-Spawner un second noeud, et écrire des users en mode batch
-
-Bonus: Configurer un Cluster
+Bonus
 =================
 
-Pour avoir plus d'un noeud en local et pouvoir inspecter le ring, il faut installer des outils complémentaires.
-
-### Sous Linux (Debian)
-
-Installer Cassandra Cluser Manager
-
-    % pip install ccm
-
-### Sous OSX
-
-Installer Cassandra Cluser Manager
-
-    $ sudo port -v sync && sudo port -v install ccm
-
-### Sous Windows
-
-Non supporté pour le moment.
-
-Pour plus d'informations : https://github.com/pcmanus/ccm
-
+Former un cluster avec l'ensemble des machines et le visualiser avec nodetool, voir OpsCenter. 
 
