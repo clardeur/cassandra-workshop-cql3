@@ -54,7 +54,7 @@ Si cela n'est pas encore fait, clonez le repository.
 
     $   git clone https://github.com/clardeur/cassandra-workshop-cql3.git
     
-Keyspace et Tables
+Tables
 ------
 
 Le Keyspace et les Tables seront initialisées automatiquement dans Cassandra, lors du lancement des tests.
@@ -76,8 +76,8 @@ méthodes de la classe `CassandraRepositoryTest.java`.
 
 Quelques liens utiles:
 
-- Le langage CQL3 : http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/cqlCommandsTOC.html
-- Le driver Java : http://www.datastax.com/documentation/developer/java-driver/1.0/index.html
+- [La syntaxe de CQL3](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/cqlCommandsTOC.html)
+- [La documentation sur le Driver Java](http://www.datastax.com/documentation/developer/java-driver/1.0/index.html)
 
 
 Bonus
