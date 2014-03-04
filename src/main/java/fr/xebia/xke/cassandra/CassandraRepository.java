@@ -67,7 +67,9 @@ public class CassandraRepository {
     }
 
     /**
-     * Read a user with by using a {@link com.datastax.driver.core.querybuilder.QueryBuilder}..
+     * Read a user with by using a {@link com.datastax.driver.core.querybuilder.QueryBuilder}.
+     * </p>
+     * Use a Clause for the equality comparison {@link com.datastax.driver.core.querybuilder.QueryBuilder#eq(String, Object)}
      */
     public ResultSet findUserWithQueryBuilder(UUID id) {
         return session.execute(select().from("user").where(eq("id", id)));

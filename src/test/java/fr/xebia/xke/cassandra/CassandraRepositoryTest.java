@@ -71,10 +71,15 @@ public class CassandraRepositoryTest extends AbstractTest {
         repository.insertUserWithQueryString(user);
 
         // When
-        repository.findUserWithQueryBuilder(user.getId());
+        ResultSet resultSet = repository.findUserWithQueryBuilder(user.getId());
 
         // Then
-        assertThat(session.execute("SELECT * FROM user WHERE id=?", user.getId()).one()).isNotNull();
+        Row row = resultSet.one();
+        assertThat(row).isNotNull();
+        assertThat(row.getUUID("id")).isEqualTo(user.getId());
+        assertThat(row.getString("name")).isEqualTo(user.getName());
+        assertThat(row.getString("email")).isEqualTo(user.getEmail());
+        assertThat(row.getInt("age")).isEqualTo(user.getAge());
     }
 
     @Test
