@@ -1,5 +1,13 @@
 ![alt text](http://cassandra.apache.org/media/img/cassandra_logo.png "cassandra_logo")
 
+
+Pré-requis
+=================
+
+- Java 1.7
+- Maven 2+
+- un IDE (Intellij, Eclipse)
+
 Installation
 =================
 
