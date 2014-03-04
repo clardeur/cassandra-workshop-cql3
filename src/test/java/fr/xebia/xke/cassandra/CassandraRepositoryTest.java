@@ -2,7 +2,6 @@ package fr.xebia.xke.cassandra;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static fr.xebia.xke.cassandra.JacksonReader.readJsonFile;
-import static java.lang.String.format;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.joda.time.DateTime.now;
 
@@ -12,9 +11,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import fr.xebia.xke.cassandra.model.Track;
@@ -43,38 +40,53 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     public void should_insert_an_user_by_using_a_query_string() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random(), "Linus Torvald", "linus.torvald@linux.org", 44);
 
         // When
         repository.insertUserWithQueryString(user);
 
         // Then
-        assertThat(session.execute("SELECT * FROM user WHERE id=?", user.getId()).one()).isNotNull();
+        Row row = session.execute("SELECT * FROM user WHERE id=?", user.getId()).one();
+        assertThat(row).isNotNull();
+        assertThat(row.getUUID("id")).isEqualTo(user.getId());
+        assertThat(row.getString("name")).isEqualTo(user.getName());
+        assertThat(row.getString("email")).isEqualTo(user.getEmail());
+        assertThat(row.getInt("age")).isEqualTo(user.getAge());
     }
 
     @Test
     public void should_insert_an_user_by_using_a_query_builder() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random(), "Linus Torvald", "linus.torvald@linux.org", 44);
 
         // When
         repository.insertUserWithQueryBuilder(user);
 
         // Then
-        assertThat(session.execute("SELECT * FROM user WHERE id=?", user.getId()).one()).isNotNull();
+        Row row = session.execute("SELECT * FROM user WHERE id=?", user.getId()).one();
+        assertThat(row).isNotNull();
+        assertThat(row.getUUID("id")).isEqualTo(user.getId());
+        assertThat(row.getString("name")).isEqualTo(user.getName());
+        assertThat(row.getString("email")).isEqualTo(user.getEmail());
+        assertThat(row.getInt("age")).isEqualTo(user.getAge());
     }
 
     @Test
     public void should_find_an_user_by_using_a_query_builder() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random(), "Richard Stallman", "richard.stallman@gnu.org", 60);
         repository.insertUserWithQueryString(user);
 
         // When
-        repository.findUserWithQueryBuilder(user.getId());
+        ResultSet resultSet = repository.findUserWithQueryBuilder(user.getId());
 
         // Then
-        assertThat(session.execute("SELECT * FROM user WHERE id=?", user.getId()).one()).isNotNull();
+        Row row = resultSet.one();
+        assertThat(row).isNotNull();
+        assertThat(row.getUUID("id")).isEqualTo(user.getId());
+        assertThat(row.getString("name")).isEqualTo(user.getName());
+        assertThat(row.getString("email")).isEqualTo(user.getEmail());
+        assertThat(row.getInt("age")).isEqualTo(user.getAge());
     }
 
     @Test
@@ -92,7 +104,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     public void should_insert_a_click_stream_with_ttl() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random(), "Jonathan Ellis", "jellis@datastax.com", 37);
         int _5_SEC_TTL = 5;
 
         // When
@@ -110,7 +122,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     public void should_find_clicks_stream_within_a_time_frame() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random(), "Jonathan Ellis", "jellis@datastax.com", 37);
         int _1_DAY_TTL = 1440;
 
         repository.insertUserClickStreamWithTTL(user.getId(), now().minusSeconds(15).toDate(), "http://cassandra.apache.org/download/", _1_DAY_TTL);
@@ -128,7 +140,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     public void should_paginate_user_clicks_stream() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random(), "Jonathan Ellis", "jellis@datastax.com", 37);
         int _1_DAY_TTL = 1440;
         int pageSize = 20;
 
@@ -147,7 +159,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     public void should_insert_user_track_likes_asynchronously() throws Exception {
         // Given
         Set<Track> tracks = loadTracks();
-        User user = newRandomUser();
+        User user = new User(UUIDs.random());
 
         // When
         for (Track likeTrack : tracks) {
@@ -162,7 +174,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     public void should_insert_track_likes_by_using_a_batch() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random());
         Set<Track> tracks = loadTracks();
 
         // When
@@ -175,7 +187,7 @@ public class CassandraRepositoryTest extends AbstractTest {
     @Test
     public void should_enable_tracing_on_query() throws Exception {
         // Given
-        User user = newRandomUser();
+        User user = new User(UUIDs.random());
 
         // When
         ResultSet resultSet = repository.findUserWithTracing(user.getId());
@@ -205,14 +217,4 @@ public class CassandraRepositoryTest extends AbstractTest {
         }
         return tracks;
     }
-
-    private User newRandomUser() throws Exception {
-        URL resourceAsStream = Resources.getResource(format("data/user%d.json", new Random().nextInt(5) + 1));
-        User user = readJsonFile(User.class, new File(resourceAsStream.toURI()));
-        UUID uuid = UUIDs.random();
-        user.setId(uuid);
-        user.setAge(new Random().nextInt(100));
-        return user;
-    }
-
 }
