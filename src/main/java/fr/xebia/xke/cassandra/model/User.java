@@ -1,12 +1,9 @@
 package fr.xebia.xke.cassandra.model;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import java.util.UUID;
 
 import static com.google.common.base.Objects.toStringHelper;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
 
     private UUID id;
@@ -16,6 +13,17 @@ public class User {
     private String email;
 
     private Integer age;
+
+    public User(UUID id) {
+        this.id = id;
+    }
+
+    public User(UUID id, String name, String email, Integer age) {
+        this(id);
+        this.name = name;
+        this.email = email;
+        this.age = age;
+    }
 
     public UUID getId() {
         return id;
